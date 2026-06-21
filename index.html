@@ -140,22 +140,46 @@
   </header>
 
   <div class="authbar" id="authbar">
-    <div class="authrow">
-      <input id="token-input" type="password" placeholder="Colle ton access token Strava (activity:read_all)" autocomplete="off">
-      <button class="btn" id="connect-btn">Connecter</button>
-      <span class="statuschip" id="status-chip">non connecté</span>
+    <!-- mode auto : config mémorisée -->
+    <div id="auto-block" class="hidden">
+      <div class="authrow">
+        <button class="btn" id="auto-btn">Actualiser mes données</button>
+        <span class="statuschip" id="status-chip">prêt</span>
+        <button class="btn ghost" id="forget-btn" style="margin-left:auto">Oublier mes accès</button>
+      </div>
+      <p class="hint" id="auto-info">Connexion automatique active : ton token se régénère tout seul à chaque ouverture.</p>
     </div>
-    <details class="setup">
-      <summary>▸ Obtenir mon token (1 fois, ~2 min)</summary>
-      <ol>
-        <li>Crée une app sur <a href="https://www.strava.com/settings/api" target="_blank" rel="noopener">strava.com/settings/api</a> (Callback Domain = ton domaine GitHub Pages).</li>
-        <li>Ouvre (remplace CLIENT_ID) : <code>https://www.strava.com/oauth/authorize?client_id=CLIENT_ID&response_type=code&redirect_uri=http://localhost&scope=activity:read_all&approval_prompt=force</code></li>
-        <li>Autorise → copie le <code>code</code> dans l'URL <code>localhost/?...code=XXXX</code>.</li>
-        <li>Échange : <code>curl -X POST https://www.strava.com/api/v3/oauth/token -d client_id=CLIENT_ID -d client_secret=SECRET -d code=XXXX -d grant_type=authorization_code</code></li>
-        <li>Colle l'<code>access_token</code> ci-dessus (valable 6h).</li>
-      </ol>
-    </details>
-    <p class="hint" id="auth-err"></p>
+
+    <!-- premier setup auto -->
+    <div id="setup-block">
+      <p class="hint" style="margin-top:0;margin-bottom:12px;color:var(--ink-dim)">Configure une fois la connexion automatique — ensuite, il suffira d'ouvrir la page.</p>
+      <div class="authrow" style="margin-bottom:8px">
+        <input id="in-clientid" type="text" inputmode="numeric" placeholder="Client ID (ex. 258714)" autocomplete="off">
+      </div>
+      <div class="authrow" style="margin-bottom:8px">
+        <input id="in-secret" type="password" placeholder="Client Secret" autocomplete="off">
+      </div>
+      <div class="authrow">
+        <input id="in-refresh" type="password" placeholder="Refresh token" autocomplete="off">
+        <button class="btn" id="save-btn">Activer la connexion auto</button>
+      </div>
+      <p class="hint" id="auth-err"></p>
+      <details class="setup">
+        <summary>▸ Où trouver ces 3 valeurs (1 fois)</summary>
+        <ol>
+          <li><strong>Client ID</strong> et <strong>Client Secret</strong> : sur <a href="https://www.strava.com/settings/api" target="_blank" rel="noopener">strava.com/settings/api</a>.</li>
+          <li><strong>Refresh token</strong> : c'est la valeur <code>refresh_token</code> renvoyée par le raccourci lors de l'échange du code (à côté de <code>access_token</code>). Tu l'as obtenue en activant ta connexion la première fois.</li>
+          <li>Ces 3 valeurs restent dans <strong>ce navigateur uniquement</strong> et ne servent qu'à parler à Strava.</li>
+        </ol>
+      </details>
+      <details class="setup">
+        <summary>▸ Je préfère coller un access token manuellement (mode 6h)</summary>
+        <div class="authrow" style="margin-top:10px">
+          <input id="token-input" type="password" placeholder="Access token Strava" autocomplete="off">
+          <button class="btn ghost" id="connect-btn">Connecter</button>
+        </div>
+      </details>
+    </div>
   </div>
 
   <nav class="tabs hidden" id="tabs">
@@ -597,12 +621,26 @@ function renderRennes(){
 }
 
 /* ===================== FLOW ===================== */
-async function connect(){
-  const tok=document.getElementById('token-input').value.trim();
-  document.getElementById('auth-err').textContent='';
-  if(!tok){document.getElementById('auth-err').textContent='Colle d\'abord ton access token.';return;}
-  TOKEN=tok;
-  document.getElementById('status-chip').textContent='connexion…';document.getElementById('status-chip').className='statuschip';
+const LS_KEY='runcockpit_creds_v1';
+function loadCreds(){try{const r=localStorage.getItem(LS_KEY);return r?JSON.parse(r):null;}catch(e){return null;}}
+function saveCreds(c){try{localStorage.setItem(LS_KEY,JSON.stringify(c));return true;}catch(e){return false;}}
+function clearCreds(){try{localStorage.removeItem(LS_KEY);}catch(e){}}
+
+// échange refresh_token -> access_token (appel direct Strava, navigateur)
+async function refreshAccessToken(c){
+  const body=new URLSearchParams({client_id:c.clientId,client_secret:c.clientSecret,grant_type:'refresh_token',refresh_token:c.refreshToken});
+  const r=await fetch(`${CFG.apiBase}/oauth/token`,{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},body});
+  const d=await r.json();
+  if(!r.ok||!d.access_token){
+    const msg=(d.errors&&d.errors[0])?`${d.errors[0].field} ${d.errors[0].code}`:(d.message||'échec');
+    throw new Error('Refresh impossible ('+msg+'). Vérifie Client ID / Secret / refresh token.');
+  }
+  // Strava renvoie parfois un nouveau refresh_token : on le met à jour
+  if(d.refresh_token&&d.refresh_token!==c.refreshToken){c.refreshToken=d.refresh_token;saveCreds(c);}
+  return d.access_token;
+}
+
+async function loadAndRender(){
   document.getElementById('loader').classList.remove('hidden');
   try{
     const all=await fetchActivities(TOKEN);
@@ -618,16 +656,91 @@ async function connect(){
   }catch(e){
     document.getElementById('loader').classList.add('hidden');
     document.getElementById('status-chip').textContent='échec';document.getElementById('status-chip').className='statuschip err';
-    document.getElementById('auth-err').textContent=e.message;
+    setErr(e.message);
+    throw e;
   }
 }
+function setErr(m){const el=document.getElementById('auth-err');if(el)el.textContent=m||'';}
+
+// connexion auto au chargement
+async function autoConnect(c){
+  showAutoBlock(true);
+  document.getElementById('status-chip').textContent='régénération du token…';document.getElementById('status-chip').className='statuschip';
+  try{
+    TOKEN=await refreshAccessToken(c);
+    await loadAndRender();
+  }catch(e){
+    document.getElementById('status-chip').textContent='échec';document.getElementById('status-chip').className='statuschip err';
+    document.getElementById('auto-info').innerHTML='<span style="color:var(--red)">'+e.message+'</span>';
+  }
+}
+
+// connexion manuelle (access token collé)
+async function connect(){
+  const tok=document.getElementById('token-input').value.trim();
+  setErr('');
+  if(!tok){setErr('Colle d\'abord ton access token.');return;}
+  TOKEN=tok;
+  document.getElementById('status-chip')&&(document.getElementById('status-chip').textContent='connexion…');
+  try{await loadAndRender();}catch(e){}
+}
+
+function showAutoBlock(on){
+  document.getElementById('auto-block').classList.toggle('hidden',!on);
+  document.getElementById('setup-block').classList.toggle('hidden',on);
+}
+
+// enregistrer la config auto
+async function saveAuto(){
+  setErr('');
+  const clientId=document.getElementById('in-clientid').value.trim();
+  const clientSecret=document.getElementById('in-secret').value.trim();
+  const refreshToken=document.getElementById('in-refresh').value.trim();
+  if(!clientId||!clientSecret||!refreshToken){setErr('Renseigne les 3 champs.');return;}
+  const c={clientId,clientSecret,refreshToken};
+  // test immédiat avant de mémoriser
+  document.getElementById('save-btn').textContent='vérification…';
+  try{
+    TOKEN=await refreshAccessToken(c);
+    saveCreds(c);
+    await loadAndRender();
+    showAutoBlock(true);
+  }catch(e){
+    setErr(e.message);
+  }finally{
+    document.getElementById('save-btn').textContent='Activer la connexion auto';
+  }
+}
+
 function showTab(name){
   $$('#tabs button').forEach(b=>b.classList.toggle('active',b.dataset.tab===name));
   ['today','sessions','load','rennes'].forEach(t=>document.getElementById('tab-'+t).classList.toggle('hidden',t!==name));
 }
+
+/* listeners */
 document.getElementById('connect-btn').addEventListener('click',connect);
 document.getElementById('token-input').addEventListener('keydown',e=>{if(e.key==='Enter')connect();});
+document.getElementById('save-btn').addEventListener('click',saveAuto);
+document.getElementById('in-refresh').addEventListener('keydown',e=>{if(e.key==='Enter')saveAuto();});
+document.getElementById('auto-btn').addEventListener('click',()=>{const c=loadCreds();if(c)autoConnect(c);});
+document.getElementById('forget-btn').addEventListener('click',()=>{
+  clearCreds();ACTS=[];TOKEN=null;DETAIL_CACHE={};
+  document.getElementById('authbar').classList.remove('connected');
+  document.getElementById('tabs').classList.add('hidden');
+  ['today','sessions','load','rennes'].forEach(t=>document.getElementById('tab-'+t).classList.add('hidden'));
+  document.getElementById('hdr-right').innerHTML='';
+  document.getElementById('in-clientid').value='';document.getElementById('in-secret').value='';document.getElementById('in-refresh').value='';
+  showAutoBlock(false);
+});
 $$('#tabs button').forEach(b=>b.addEventListener('click',()=>showTab(b.dataset.tab)));
+
+/* démarrage : si config mémorisée -> connexion auto immédiate */
+(function init(){
+  const c=loadCreds();
+  if(c&&c.clientId&&c.clientSecret&&c.refreshToken){autoConnect(c);}
+  else{showAutoBlock(false);}
+})();
+
 </script>
 </body>
 </html>
