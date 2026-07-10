@@ -727,39 +727,51 @@ function genSession(){
   let ctx=$('#g-ctx').value, want=$('#g-want').value, feel=$('#g-feel').value;
   let mins=parseInt($('#g-time').value,10);
   const blocks=[], notes=[]; let title='', zoneKey='ef', why='', shoe=SHOES.ef, tagCol='go';
+  const QUALITY=['cotes','seuil','as','vma'];
 
-  /* --- garde-fous données live --- */
-  if(ACTS.length){
-    const aw=acwr(ACTS), streak=runStreak(), dsq=daysSinceQuality();
-    if(streak>=7){
-      notes.push(`<strong>${streak} jours de course d'affilée</strong> : ta règle des 7 jours s'applique — aujourd'hui c'est repos complet ou footing très léger, quelle que soit l'envie.`);
-      want='recup'; mins=Math.min(mins,45);
-    } else if(aw.ratio>1.5&&['cotes','seuil','as','vma','sl','surprise'].includes(want)){
-      notes.push(`<strong>ACWR ${aw.ratio.toFixed(2)} en zone rouge</strong> : je remplace volontairement la qualité par de l'EF court. Assimile d'abord, pousse ensuite.`);
-      want='ef'; mins=Math.min(mins,55);
-    } else if(dsq<2&&['seuil','as','vma','cotes'].includes(want)){
-      notes.push(`Qualité il y a ${dsq===0?'moins de 24h':dsq+' jour(s)'} : deux séances dures rapprochées diluent les deux. Je te propose de l'EF, garde la qualité pour après-demain.`);
-      want='ef';
-    }
-    if(feel==='lourd'&&['cotes','seuil','as','vma'].includes(want)){
-      notes.push('<strong>Jambes lourdes + qualité demandée</strong> : mauvais cocktail. La séance dure ne sera ni exécutée proprement ni bien assimilée — je bascule en EF. Si demain ça va mieux, tu la fais fraîche.');
-      want='ef';
-    }
-  } else if(feel==='lourd'&&['cotes','seuil','as','vma'].includes(want)){
-    notes.push('<strong>Jambes lourdes</strong> : je remplace la qualité par de l\'EF. Une séance dure sur jambes cuites = stimulus raté + fatigue en plus.');
-    want='ef';
-  }
-
-  /* --- surprends-moi : choix selon contexte et fraîcheur --- */
+  /* --- surprends-moi : choix selon contexte et fraîcheur (aucune demande explicite à respecter) --- */
   if(want==='surprise'){
     const dsq=ACTS.length?daysSinceQuality():3;
-    if(feel==='lourd'||dsq<2){want='ef';}
+    const streak0=ACTS.length?runStreak():0;
+    if(streak0>=7){want='recup';notes.push(`<strong>${streak0} jours de course d'affilée</strong> : en mode « surprends-moi », je choisis la récup — c'est ce que ton corps réclame.`);}
+    else if(feel==='lourd'||dsq<2){want='ef';}
     else if(ctx==='general'){want=(new Date().getDay()%2===0)?'cotes':'ef';}
     else if(ctx==='marathon'){want='as';}
     else if(ctx==='semi'){want='seuil';}
     else{want=mins>=70?'as':'seuil';}
-    notes.push('Mode « surprends-moi » : choix basé sur ton contexte'+(ACTS.length?', ta charge et ta dernière qualité.':' déclaré.'));
+    if(!notes.length)notes.push('Mode « surprends-moi » : choix basé sur ton contexte'+(ACTS.length?', ta charge et ta dernière qualité.':' déclaré.'));
   }
+
+  /* --- garde-fous : ils MODULENT (volume/intensité réduits + avertissement), jamais ils ne remplacent
+         silencieusement la séance demandée. Exception : au-delà d'un streak vraiment extrême (≥14j),
+         le risque devient tel qu'on prévient fortement, mais le choix reste au coureur. --- */
+  let factor=1; // multiplicateur de volume appliqué à `mins`
+  const isQ=QUALITY.includes(want);
+  if(want!=='recup'){
+    if(ACTS.length){
+      const aw=acwr(ACTS), streak=runStreak(), dsq=daysSinceQuality();
+      if(streak>=14){
+        notes.push(`<strong>${streak} jours de course d'affilée</strong> : c'est beaucoup. Je maintiens ta séance « ${want} » mais très allégée — un vrai jour OFF serait le choix le plus sûr si tes jambes te le demandent.`);
+        factor=Math.min(factor,0.5);
+      } else if(streak>=7){
+        notes.push(`<strong>${streak} jours de course d'affilée</strong> : ta règle des 7 jours s'applique. Je réduis le volume de la séance plutôt que de l'annuler — à toi de sentir si tu préfères basculer en récup.`);
+        factor=Math.min(factor,0.7);
+      }
+      if(aw.ratio>1.5&&isQ){
+        notes.push(`<strong>ACWR ${aw.ratio.toFixed(2)} en zone rouge</strong> : je réduis fortement le volume de cette qualité pour limiter le risque, sans l'annuler.`);
+        factor=Math.min(factor,0.55);
+      }
+      if(dsq<2&&isQ){
+        notes.push(`Qualité il y a ${dsq===0?'moins de 24h':dsq+' jour(s)'} : deux séances dures rapprochées diluent les deux. Je réduis le volume de celle-ci — garde l'essentiel pour après-demain.`);
+        factor=Math.min(factor,0.7);
+      }
+    }
+    if(feel==='lourd'&&isQ){
+      notes.push('<strong>Jambes lourdes + qualité demandée</strong> : je garde le type de séance mais je coupe le volume net — l\'intensité reste, la durée non. Si ça ne passe pas à l\'échauffement, arrête-toi en EF.');
+      factor=Math.min(factor,0.5);
+    }
+  }
+  if(factor<1)mins=Math.max(20,Math.round(mins*factor));
 
   /* --- construction des séances --- */
   const wu=mins>=90?'20\' EF ('+zRange('ef')+') + 3 lignes droites en accélération':'15\' EF ('+zRange('ef')+') + 3 lignes droites';
