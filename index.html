@@ -3,32 +3,35 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Run Cockpit v2 — Léo</title>
+<title>Run Cockpit v3 — Léo</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,400..900&family=IBM+Plex+Mono:wght@400;500;600&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
   :root{
-    /* ---- THÈME CLAIR v2 ---- */
-    --bg:#f4f5f2;
-    --bg-grad:#e9ede6;
-    --panel:#ffffff;
-    --panel-2:#f4f6f3;
-    --panel-3:#edf0ec;
-    --line:#dfe4dc;
-    --line-soft:#eaeee7;
-    --ink:#141f1a;
-    --ink-dim:#5b6a62;
-    --ink-faint:#95a29a;
-    /* accents */
-    --go:#0c8a58;          --go-bg:#e2f5eb;
-    --blue:#2b6fe0;        --blue-bg:#e7effd;
-    --amber:#dd8a12;       --amber-bg:#fdf0da;
-    --red:#dc4a42;         --red-bg:#fdeae9;
-    --violet:#7a52e0;      --violet-bg:#efe9fc;
-    --teal:#0f9aa6;        --teal-bg:#e0f5f6;
+    /* ---- THÈME SOMBRE « POSTE DE PILOTAGE » v3 ---- */
+    /* anthracite profond en 3 paliers — jamais noir pur */
+    --bg:#0d1117;
+    --bg-grad:#12181f;
+    --panel:#161c24;
+    --panel-2:#1c232d;
+    --panel-3:#242d38;
+    --line:#2a333f;
+    --line-soft:#212934;
+    --ink:#eef3f6;
+    --ink-dim:#9fb0bd;
+    --ink-faint:#647685;
+    /* accent unique fort : vert lime « performance » */
+    --go:#b6f24a;          --go-bg:#232e12;   --go-ink:#0d1117;
+    /* couleurs de zones/états — saturées pour fond sombre */
+    --blue:#4d9dff;        --blue-bg:#12233b;
+    --amber:#ffb128;       --amber-bg:#3a2c0e;
+    --red:#ff5d52;         --red-bg:#3a1613;
+    --violet:#a988ff;      --violet-bg:#251a3d;
+    --teal:#34d6c8;        --teal-bg:#0e302e;
     --radius:16px;
-    --shadow:0 1px 2px rgba(20,40,30,.04),0 6px 22px rgba(20,40,30,.06);
+    --shadow:0 1px 2px rgba(0,0,0,.5),0 8px 30px rgba(0,0,0,.35);
+    --glow:0 0 0 1px rgba(182,242,74,.12),0 0 22px rgba(182,242,74,.10);
     --mono:"IBM Plex Mono",ui-monospace,Menlo,monospace;
     --sans:"Inter","Helvetica Neue",system-ui,-apple-system,sans-serif;
     --disp:"Archivo","Inter",system-ui,sans-serif;
@@ -36,7 +39,10 @@
   *{box-sizing:border-box;margin:0;padding:0}
   html{scroll-behavior:smooth}
   body{
-    background:radial-gradient(1100px 500px at 85% -8%, var(--bg-grad) 0%, transparent 55%),var(--bg);
+    background:
+      linear-gradient(rgba(158,176,189,.028) 1px,transparent 1px) 0 0/100% 40px,
+      linear-gradient(90deg,rgba(158,176,189,.028) 1px,transparent 1px) 0 0/40px 100%,
+      radial-gradient(1200px 560px at 82% -10%, var(--bg-grad) 0%, transparent 60%),var(--bg);
     color:var(--ink);font-family:var(--sans);line-height:1.5;-webkit-font-smoothing:antialiased;min-height:100vh;
   }
   .wrap{max-width:1220px;margin:0 auto;padding:24px 20px 80px}
@@ -49,26 +55,27 @@
   .hdr-right .big{font-family:var(--disp);font-stretch:115%;font-variant-numeric:tabular-nums;font-size:26px;font-weight:800;color:var(--ink);display:block}
 
   .authbar{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:16px 18px;margin-bottom:22px;box-shadow:var(--shadow)}
-  .authbar.connected{border-color:#b9e2c9;background:linear-gradient(0deg,#f0faf4,#ffffff)}
+  .authbar.connected{border-color:rgba(182,242,74,.35);box-shadow:var(--glow)}
   .authrow{display:flex;gap:12px;align-items:center;flex-wrap:wrap}
   .authrow input{flex:1;min-width:220px;background:var(--panel-2);border:1px solid var(--line);color:var(--ink);padding:11px 13px;border-radius:9px;font-family:var(--mono);font-size:13px}
-  .authrow input:focus{outline:none;border-color:var(--go);background:#fff}
-  button.btn{background:var(--go);color:#fff;border:none;font-weight:700;padding:11px 18px;border-radius:9px;cursor:pointer;font-size:14px;font-family:var(--sans);transition:transform .08s,filter .15s}
-  button.btn:hover{filter:brightness(1.06)}button.btn:active{transform:translateY(1px)}
+  .authrow input::placeholder{color:var(--ink-faint)}
+  .authrow input:focus{outline:none;border-color:var(--go);background:var(--panel-3)}
+  button.btn{background:var(--go);color:var(--go-ink);border:none;font-weight:800;padding:11px 18px;border-radius:9px;cursor:pointer;font-size:14px;font-family:var(--sans);transition:transform .08s,filter .15s,box-shadow .15s}
+  button.btn:hover{filter:brightness(1.08);box-shadow:var(--glow)}button.btn:active{transform:translateY(1px)}
   button.btn.ghost{background:var(--panel-2);color:var(--ink-dim);border:1px solid var(--line)}
-  button.btn.ghost:hover{background:var(--panel-3);color:var(--ink)}
+  button.btn.ghost:hover{background:var(--panel-3);color:var(--ink);box-shadow:none}
   .hint{font-size:12px;color:var(--ink-faint);margin-top:10px;line-height:1.6}
   .hint a{color:var(--go);text-decoration:none}.hint code{font-family:var(--mono);background:var(--panel-3);padding:1px 5px;border-radius:4px;color:var(--ink-dim)}
   details.setup{margin-top:10px}details.setup summary{cursor:pointer;color:var(--blue);font-size:12px;font-family:var(--mono)}
   details.setup ol{margin:10px 0 0 18px;font-size:12.5px;color:var(--ink-dim);line-height:1.85}
-  .statuschip{font-family:var(--mono);font-size:12px;padding:4px 10px;border-radius:20px;border:1px solid var(--line);background:var(--panel-2)}
-  .statuschip.ok{color:var(--go);border-color:#b9e2c9;background:var(--go-bg)}.statuschip.err{color:var(--red);border-color:#f2c4c4;background:var(--red-bg)}
+  .statuschip{font-family:var(--mono);font-size:12px;padding:4px 10px;border-radius:20px;border:1px solid var(--line);background:var(--panel-2);color:var(--ink-dim)}
+  .statuschip.ok{color:var(--go);border-color:rgba(182,242,74,.35);background:var(--go-bg)}.statuschip.err{color:var(--red);border-color:rgba(255,93,82,.4);background:var(--red-bg)}
 
   nav.tabs{display:flex;gap:6px;margin-bottom:22px;flex-wrap:wrap}
-  nav.tabs button{background:var(--panel);border:1px solid var(--line);color:var(--ink-dim);padding:9px 16px;border-radius:10px;cursor:pointer;font-size:12px;font-weight:700;font-family:var(--disp);font-stretch:110%;letter-spacing:.06em;text-transform:uppercase;transition:all .12s;box-shadow:var(--shadow)}
-  nav.tabs button.active{background:var(--ink);color:#fff;border-color:var(--ink)}
-  nav.tabs button:hover{color:var(--ink)}
-  nav.tabs button.active:hover{color:#fff}
+  nav.tabs button{background:var(--panel);border:1px solid var(--line);color:var(--ink-dim);padding:9px 16px;border-radius:10px;cursor:pointer;font-size:12px;font-weight:700;font-family:var(--disp);font-stretch:110%;letter-spacing:.06em;text-transform:uppercase;transition:all .12s}
+  nav.tabs button.active{background:var(--go);color:var(--go-ink);border-color:var(--go);box-shadow:var(--glow)}
+  nav.tabs button:hover{color:var(--ink);border-color:var(--ink-faint)}
+  nav.tabs button.active:hover{color:var(--go-ink)}
 
   .grid{display:grid;gap:16px}.g2{grid-template-columns:repeat(2,1fr)}.g3{grid-template-columns:repeat(3,1fr)}.g4{grid-template-columns:repeat(4,1fr)}
   @media(max-width:860px){.g3,.g4{grid-template-columns:repeat(2,1fr)}}
@@ -84,6 +91,7 @@
   .sub{font-size:12.5px;color:var(--ink-dim);margin-top:8px}.sub strong{color:var(--ink)}
   .tag{display:inline-block;font-family:var(--mono);font-size:11px;padding:2px 8px;border-radius:5px;letter-spacing:.05em;font-weight:600}
   .tag.go{background:var(--go-bg);color:var(--go)}.tag.amber{background:var(--amber-bg);color:var(--amber)}.tag.red{background:var(--red-bg);color:var(--red)}.tag.blue{background:var(--blue-bg);color:var(--blue)}.tag.violet{background:var(--violet-bg);color:var(--violet)}.tag.teal{background:var(--teal-bg);color:var(--teal)}
+  .tag.solid{background:var(--go);color:var(--go-ink);font-weight:800}
 
   .gauge-wrap{display:flex;align-items:center;gap:18px}
   .gauge-read{font-family:var(--disp);font-variant-numeric:tabular-nums}.gauge-read .gnum{font-size:36px;font-weight:800}.gauge-read .glbl{font-family:var(--mono);font-size:11px;color:var(--ink-dim)}
@@ -157,7 +165,7 @@
   .genrow{display:flex;gap:12px;flex-wrap:wrap;align-items:flex-end;margin-bottom:8px}
   .genrow label{display:flex;flex-direction:column;gap:5px;font-family:var(--mono);font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-faint)}
   .genrow select,.genrow input{background:var(--panel-2);border:1px solid var(--line);border-radius:9px;padding:10px 12px;font-family:var(--sans);font-size:14px;color:var(--ink);min-width:150px}
-  .genrow select:focus,.genrow input:focus{outline:none;border-color:var(--go);background:#fff}
+  .genrow select:focus,.genrow input:focus{outline:none;border-color:var(--go);background:var(--panel-3)}
   .wblocks{margin-top:14px;display:flex;flex-direction:column;gap:8px}
   .wblock{display:grid;grid-template-columns:130px 1fr;gap:12px;padding:12px 14px;background:var(--panel-2);border:1px solid var(--line);border-radius:11px}
   @media(max-width:560px){.wblock{grid-template-columns:1fr}}
@@ -165,6 +173,16 @@
   .wblock .wd{font-size:14px;color:var(--ink)}
   .stitle{font-family:var(--disp);font-stretch:112%;font-size:22px;font-weight:800;text-transform:uppercase;letter-spacing:-.01em}
   .nodata{border-left:4px solid var(--amber)}
+
+  /* micro-cycle 7 jours */
+  .mc-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:8px;margin-top:6px}
+  @media(max-width:760px){.mc-grid{grid-template-columns:1fr}}
+  .mc-day{background:var(--panel-2);border:1px solid var(--line);border-radius:11px;padding:10px;display:flex;flex-direction:column;gap:8px;min-height:118px}
+  @media(max-width:760px){.mc-day{flex-direction:row;align-items:center;min-height:0}.mc-day .mc-sess{flex:1}}
+  .mc-dow{font-family:var(--mono);font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-faint)}
+  .mc-day .tag{white-space:nowrap}
+  .mc-detail{font-size:11.5px;color:var(--ink-dim);margin-top:6px;line-height:1.45}
+  @media(max-width:760px){.mc-detail{margin-top:2px}}
 
   .hidden{display:none!important}
   .loader{text-align:center;padding:60px 20px;color:var(--ink-dim);font-family:var(--mono);font-size:14px}
@@ -180,7 +198,7 @@
 
   <header class="top">
     <div class="brand">
-      <span class="eyebrow">Run Cockpit v2 · Léo</span>
+      <span class="eyebrow">Run Cockpit v3 · Léo</span>
       <h1>Tableau de bord course
         <small id="hdr-sub">analyse · forme (CTL/ATL/TSB) · plan · générateur de séance</small>
       </h1>
@@ -265,6 +283,10 @@
         <div class="card"><h4>Charge récente</h4><div class="metric mid" id="today-mono">—</div><div class="sub" id="today-mono-sub"></div></div>
       </div>
       <div class="coachbox" id="today-coach"></div>
+    </div>
+    <div class="card" id="micro-card" style="margin-top:16px">
+      <h4>Ta semaine — 7 prochains jours</h4>
+      <div id="micro-out"></div>
     </div>
   </section>
 
@@ -366,12 +388,17 @@
       <div class="card" style="margin-bottom:16px">
         <h4>Fitness · Fatigue · Forme — 120 jours (CTL / ATL / TSB)</h4>
         <div id="fit-chart"></div>
-        <div class="zlegend"><span><i class="dot" style="background:#0c8a58"></i>Fitness (CTL, moyenne 42 j)</span><span><i class="dot" style="background:#dd8a12"></i>Fatigue (ATL, moyenne 7 j)</span></div>
+        <div class="zlegend"><span><i class="dot" style="background:#b6f24a"></i>Fitness (CTL, moyenne 42 j)</span><span><i class="dot" style="background:#ffb128"></i>Fatigue (ATL, moyenne 7 j)</span></div>
         <div class="sub" id="fit-sub"></div>
+      </div>
+      <div class="card" style="margin-bottom:16px">
+        <h4>Efficience aérobie — allure à FC constante</h4>
+        <div id="eff-chart"></div>
+        <div class="sub" id="eff-sub"></div>
       </div>
       <div class="grid g3">
         <div class="card">
-          <h4>ACWR · ratio aigu/chronique</h4>
+          <h4>ACWR · charge aiguë/chronique (EWMA)</h4>
           <div class="gauge-wrap">
             <svg width="92" height="92" viewBox="0 0 92 92" id="acwr-gauge"></svg>
             <div class="gauge-read"><div class="gnum" id="acwr-val">—</div><div class="glbl" id="acwr-state"></div></div>
@@ -437,21 +464,21 @@
   </section>
 
   <footer>
-    Run Cockpit v2 · données Strava en lecture seule · calculs locaux · aucune donnée stockée ni transmise à un tiers<br>
+    Run Cockpit v3 · données Strava en lecture seule · calculs locaux · aucune donnée stockée ni transmise à un tiers<br>
     Outil d'aide — il complète tes sensations, ne les remplace pas, et ne constitue pas un avis médical.
   </footer>
 </div>
 <script>
 /* ===================== CONFIG : ZONES RECALÉES ===================== */
 const ZONES=[
-  {key:'recovery', label:'Récup',          short:'Récup', color:'#0f9aa6', bg:'#e0f5f6', pMin:290, pMax:330, hr:[0,124],   use:'jambes légères, décrassage'},
-  {key:'ef',       label:'Endurance fond.', short:'EF',    color:'#0c8a58', bg:'#e2f5eb', pMin:245, pMax:260, hr:[128,142], use:'gros du volume, sorties faciles'},
-  {key:'sv1',      label:'End. active / SV1',short:'SV1',  color:'#5bbf3a', bg:'#eaf7e2', pMin:235, pMax:245, hr:[142,150], use:'endurance active, finish de SL'},
-  {key:'as42',     label:'Allure marathon', short:'AS42',  color:'#2b6fe0', bg:'#e7effd', pMin:220, pMax:223, hr:[153,160], use:'🎯 allure cible Rennes 3\'42'},
-  {key:'tempo',    label:'Tempo / SV2',     short:'Tempo', color:'#7a52e0', bg:'#efe9fc', pMin:210, pMax:218, hr:[155,161], use:'tempo soutenu 20-40\''},
-  {key:'seuil',    label:'Seuil / AS21',    short:'Seuil', color:'#dd8a12', bg:'#fdf0da', pMin:204, pMax:212, hr:[158,164], use:'seuil lactique, allure semi'},
-  {key:'vo2',      label:'VO2max / AS10',   short:'VO2',   color:'#e0571f', bg:'#fdeae0', pMin:188, pMax:198, hr:[152,162], use:'intervalles longs, allure 10k'},
-  {key:'vma',      label:'VMA courte',      short:'VMA',   color:'#dc4a42', bg:'#fdeae9', pMin:175, pMax:185, hr:[160,200], use:'fractionné court, force vitesse'}
+  {key:'recovery', label:'Récup',          short:'Récup', color:'#34d6c8', bg:'#0e302e', pMin:290, pMax:330, hr:[0,124],   use:'jambes légères, décrassage'},
+  {key:'ef',       label:'Endurance fond.', short:'EF',    color:'#5bd07a', bg:'#123020', pMin:245, pMax:260, hr:[128,142], use:'gros du volume, sorties faciles'},
+  {key:'sv1',      label:'End. active / SV1',short:'SV1',  color:'#8fe04a', bg:'#1e3312', pMin:235, pMax:245, hr:[142,150], use:'endurance active, finish de SL'},
+  {key:'as42',     label:'Allure marathon', short:'AS42',  color:'#4d9dff', bg:'#12233b', pMin:220, pMax:223, hr:[153,160], use:'🎯 allure cible Rennes 3\'42'},
+  {key:'tempo',    label:'Tempo / SV2',     short:'Tempo', color:'#a988ff', bg:'#251a3d', pMin:210, pMax:218, hr:[155,161], use:'tempo soutenu 20-40\''},
+  {key:'seuil',    label:'Seuil / AS21',    short:'Seuil', color:'#ffb128', bg:'#3a2c0e', pMin:204, pMax:212, hr:[158,164], use:'seuil lactique, allure semi'},
+  {key:'vo2',      label:'VO2max / AS10',   short:'VO2',   color:'#ff8a3d', bg:'#3a220e', pMin:188, pMax:198, hr:[152,162], use:'intervalles longs, allure 10k'},
+  {key:'vma',      label:'VMA courte',      short:'VMA',   color:'#ff5d52', bg:'#3a1613', pMin:175, pMax:185, hr:[160,200], use:'fractionné court, force vitesse'}
 ];
 const ZBY=Object.fromEntries(ZONES.map(z=>[z.key,z]));
 
@@ -477,6 +504,19 @@ function paceOf(a){if(!a.distance||!a.moving_time)return 0;return a.moving_time/
 function actDate(a){return new Date(a.start_date_local||a.start_date);}
 function cleanName(n){return(n||'').replace(/[\u{1F000}-\u{1FFFF}\u{2600}-\u{27BF}\u2049\u2122\u2139\u2194-\u21AA\u231A\u231B\u23E9-\u23FA\u24C2\u25AA\u25AB\u25B6\u25C0\u25FB-\u25FE\u2B05\u2B06\u2B07\u2B1B\u2B1C\u2B50\u2B55\uFE0F]/gu,'').trim();}
 function effort(a){return a.suffer_score||a.relative_effort||0;}
+/* charge d'entraînement robuste : utilise le Relative Effort Strava quand il existe
+   (dispo seulement avec FC), sinon l'estime en TRIMP-like = durée(min) × poids d'intensité
+   de la zone d'allure. Évite les "trous" de charge sur les séances sans ceinture FC,
+   qui faussaient CTL/ATL/TSB. Poids calibrés pour recoller à l'échelle du suffer score. */
+const ZLOAD={recovery:0.55,ef:0.85,sv1:1.15,as42:1.7,tempo:2.0,seuil:2.5,vo2:3.2,vma:3.6};
+function eLoad(a){
+  const re=a.suffer_score||a.relative_effort||0;
+  if(re>0)return re;
+  const min=(a.moving_time||0)/60;
+  if(min<=0)return 0;
+  const w=ZLOAD[classifyRun(a)]||1;
+  return Math.round(min*w);
+}
 function zRange(key){const z=ZBY[key];return`${fmtPace(z.pMax)}–${fmtPace(z.pMin)}/km`;}
 
 function zoneOfPace(p){
@@ -531,7 +571,7 @@ function weeklyBuckets(acts,weeks=8){
     out.push({
       label:`${ws.getDate()}/${ws.getMonth()+1}`,
       km:+(inW.reduce((s,a)=>s+(a.distance||0),0)/1000).toFixed(1),
-      re:Math.round(inW.reduce((s,a)=>s+effort(a),0)),
+      re:Math.round(inW.reduce((s,a)=>s+eLoad(a),0)),
       runs:inW.length,
       elev:Math.round(inW.reduce((s,a)=>s+(a.total_elevation_gain||0),0)),
     });
@@ -540,13 +580,15 @@ function weeklyBuckets(acts,weeks=8){
 }
 function acwr(acts){
   const now=Date.now();
-  const load=days=>acts.filter(a=>now-actDate(a).getTime()<=days*86400000).reduce((s,a)=>s+effort(a),0);
+  const load=days=>acts.filter(a=>now-actDate(a).getTime()<=days*86400000).reduce((s,a)=>s+eLoad(a),0);
   const acute=load(7),chronic=load(28)/4;
-  return{acute,chronic,ratio:chronic>0?acute/chronic:0};
+  // ratio = ACWR EWMA (ATL/CTL du jour) : plus stable que le ratio brut, cohérent avec la courbe de forme.
+  const fs=fitnessSeries(), ratio=fs.R[fs.R.length-1]||0;
+  return{acute,chronic,ratio,rawRatio:chronic>0?acute/chronic:0};
 }
 function monotonyStrain(acts){
   const now=Date.now(),daily=new Array(7).fill(0);
-  acts.forEach(a=>{const d=Math.floor((now-actDate(a).getTime())/86400000);if(d>=0&&d<7)daily[d]+=effort(a);});
+  acts.forEach(a=>{const d=Math.floor((now-actDate(a).getTime())/86400000);if(d>=0&&d<7)daily[d]+=eLoad(a);});
   const sum=daily.reduce((s,x)=>s+x,0),mean=sum/7,sd=Math.sqrt(daily.reduce((s,x)=>s+(x-mean)**2,0)/7);
   const monotony=sd>0?mean/sd:(mean>0?3:0);
   return{monotony:+monotony.toFixed(2),strain:Math.round(sum*monotony),sum:Math.round(sum)};
@@ -571,19 +613,32 @@ function daysSinceQuality(){
   return q?Math.floor((Date.now()-actDate(q).getTime())/86400000):99;
 }
 
-/* ===================== FITNESS / FATIGUE / FORME (CTL·ATL·TSB) ===================== */
+/* ===================== FITNESS / FATIGUE / FORME (CTL·ATL·TSB) =====================
+   Fiabilité v3 :
+   - seed du CTL/ATL sur la charge quotidienne MOYENNE de toute la fenêtre (et non les
+     14 premiers jours) → supprime le biais de démarrage du modèle. Les EWMA convergent
+     alors sans fausser le premier tiers de la courbe.
+   - WARMUP=28 : les 28 premiers jours restent statistiquement peu fiables, on les
+     signale (grisés) plutôt que de les présenter comme vérité.
+   - série ACWR EWMA cohérente : ratio ATL/CTL (méthode Gabbett moderne), lissée,
+     au lieu d'un ratio brut aigu/chronique qui saute après chaque sortie longue. */
+const WARMUP=28;
 function fitnessSeries(){
   const days=120, arr=new Array(days).fill(0);
   ACTS.forEach(a=>{
     const d=Math.floor((Date.now()-actDate(a).getTime())/86400000);
     const idx=days-1-d;
-    if(idx>=0&&idx<days)arr[idx]+=effort(a);
+    if(idx>=0&&idx<days)arr[idx]+=eLoad(a);
   });
-  let ctl=arr.slice(0,14).reduce((s,x)=>s+x,0)/14;
-  let atl=ctl;
-  const C=[],A=[],T=[];
-  arr.forEach(v=>{ctl+=(v-ctl)/42;atl+=(v-atl)/7;C.push(ctl);A.push(atl);T.push(ctl-atl);});
-  return{C,A,T};
+  const seed=arr.reduce((s,x)=>s+x,0)/days; // charge quotidienne moyenne réelle
+  let ctl=seed, atl=seed;
+  const C=[],A=[],T=[],R=[];
+  arr.forEach(v=>{
+    ctl+=(v-ctl)/42; atl+=(v-atl)/7;
+    C.push(ctl);A.push(atl);T.push(ctl-atl);
+    R.push(ctl>0?atl/ctl:0); // ACWR EWMA = fatigue/fitness
+  });
+  return{C,A,T,R,arr};
 }
 function tsbState(tsb){
   if(tsb>10)return['affûté — prêt à performer','var(--blue)'];
@@ -597,17 +652,170 @@ function renderFitness(){
   const maxV=Math.max(...f.C,...f.A,1);
   const x=i=>pad+i/(n-1)*(W-2*pad);
   const y=v=>H-pad-(v/maxV)*(H-2*pad);
-  const line=(arr,c,w)=>`<polyline fill="none" stroke="${c}" stroke-width="${w}" stroke-linejoin="round" points="${arr.map((v,i)=>x(i).toFixed(1)+','+y(v).toFixed(1)).join(' ')}"/>`;
-  const area=`<path d="M ${x(0)} ${H-pad} ${f.C.map((v,i)=>'L '+x(i).toFixed(1)+' '+y(v).toFixed(1)).join(' ')} L ${x(n-1)} ${H-pad} Z" fill="#0c8a58" opacity=".07"/>`;
-  document.getElementById('fit-chart').innerHTML=`<svg viewBox="0 0 ${W} ${H}" style="width:100%;height:auto;display:block">${area}${line(f.A,'#dd8a12',1.6)}${line(f.C,'#0c8a58',2.6)}</svg>`;
+  const line=(arr,c,w,from=0)=>`<polyline fill="none" stroke="${c}" stroke-width="${w}" stroke-linejoin="round" points="${arr.map((v,i)=>[i,v]).filter(p=>p[0]>=from).map(p=>x(p[0]).toFixed(1)+','+y(p[1]).toFixed(1)).join(' ')}"/>`;
+  const area=`<path d="M ${x(0)} ${H-pad} ${f.C.map((v,i)=>'L '+x(i).toFixed(1)+' '+y(v).toFixed(1)).join(' ')} L ${x(n-1)} ${H-pad} Z" fill="#b6f24a" opacity=".07"/>`;
+  // masque "warmup" : les WARMUP premiers jours du modèle sont peu fiables → grisés + hachures
+  const wx=x(WARMUP-1);
+  const warm=`<rect x="0" y="0" width="${wx}" height="${H}" fill="url(#warm)" opacity=".5"/>
+    <line x1="${wx}" y1="6" x2="${wx}" y2="${H-4}" stroke="#2a333f" stroke-width="1" stroke-dasharray="3 3"/>
+    <text x="${wx-4}" y="16" text-anchor="end" font-family="IBM Plex Mono,monospace" font-size="8" fill="#647685">modèle en chauffe</text>`;
+  const defs=`<defs><pattern id="warm" width="6" height="6" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><rect width="6" height="6" fill="#0d1117"/><line x1="0" y1="0" x2="0" y2="6" stroke="#1c232d" stroke-width="3"/></pattern></defs>`;
+  document.getElementById('fit-chart').innerHTML=`<svg viewBox="0 0 ${W} ${H}" style="width:100%;height:auto;display:block">${defs}${area}${warm}${line(f.A,'#ffb128',1.6,WARMUP)}${line(f.C,'#b6f24a',2.6,WARMUP)}${line(f.A,'#ffb128',1,0)}${line(f.C,'#b6f24a',1.4,0)}</svg>`;
   const ctl=f.C[n-1],atl=f.A[n-1],tsb=f.T[n-1];
   const st=tsbState(tsb);
-  document.getElementById('fit-sub').innerHTML=`Fitness (CTL) <strong>${ctl.toFixed(0)}</strong> · Fatigue (ATL) <strong>${atl.toFixed(0)}</strong> · Forme (TSB) <strong style="color:${st[1]}">${tsb>0?'+':''}${tsb.toFixed(0)} — ${st[0]}</strong>. Le jour de course, vise un TSB entre <strong>+5 et +15</strong> : c'est ta boussole pour le taper d'octobre. (Calcul sur 120 j : le CTL absolu est indicatif, sa <strong>tendance</strong> est ce qui compte.)`;
+  document.getElementById('fit-sub').innerHTML=`Fitness (CTL) <strong>${ctl.toFixed(0)}</strong> · Fatigue (ATL) <strong>${atl.toFixed(0)}</strong> · Forme (TSB) <strong style="color:${st[1]}">${tsb>0?'+':''}${tsb.toFixed(0)} — ${st[0]}</strong>. Le jour de course, vise un TSB entre <strong>+5 et +15</strong>. La zone hachurée (28 premiers jours) est l'amorçage du modèle : peu fiable, lis surtout la <strong>tendance récente</strong>.`;
   const tEl=document.getElementById('today-tsb');
   tEl.textContent=(tsb>0?'+':'')+tsb.toFixed(0);
   tEl.style.color=st[1];
   document.getElementById('today-tsb-sub').innerHTML='forme (TSB) · '+st[0];
   return{ctl,atl,tsb};
+}
+
+/* ===================== EFFICIENCE AÉROBIE (allure à FC constante) =====================
+   Le marqueur reine de la progression de base : à FC EF donnée, mon allure s'améliore-t-elle ?
+   On isole les footings faciles (EF/récup/SV1) AVEC FC, on normalise l'allure à une FC de
+   référence (140 bpm) via un petit coefficient de coût cardiaque, puis on regarde la tendance
+   semaine par semaine. Data 100% API actuelle (allure moy + FC moy par séance). */
+function aerobicEfficiency(){
+  const now=Date.now();
+  const runs=ACTS.filter(a=>{
+    const c=classifyRun(a);
+    return ['ef','recovery','sv1'].includes(c) && a.average_heartrate && a.distance>3000;
+  });
+  // indice d'efficience = vitesse (m/min) par battement → plus haut = plus efficient
+  const pts=runs.map(a=>{
+    const spd=(a.distance/(a.moving_time/60)); // m/min
+    const eff=spd/a.average_heartrate;          // m/min/bpm
+    return {t:actDate(a).getTime(), eff, hr:a.average_heartrate, pace:paceOf(a)};
+  }).filter(p=>isFinite(p.eff)&&p.eff>0).sort((x,y)=>x.t-y.t);
+  return pts;
+}
+function renderEfficiency(){
+  const el=document.getElementById('eff-chart'); if(!el)return;
+  const pts=aerobicEfficiency();
+  if(pts.length<4){
+    el.innerHTML='';
+    document.getElementById('eff-sub').innerHTML='Il faut au moins 4 footings faciles avec FC sur la période pour tracer la tendance. Porte ta ceinture sur les footings et reviens ici.';
+    return;
+  }
+  const W=600,H=150,pad=10;
+  const t0=pts[0].t,t1=pts[pts.length-1].t,span=Math.max(1,t1-t0);
+  const effs=pts.map(p=>p.eff),lo=Math.min(...effs)*0.98,hi=Math.max(...effs)*1.02;
+  const x=t=>pad+(t-t0)/span*(W-2*pad);
+  const y=e=>H-pad-(e-lo)/(hi-lo)*(H-2*pad);
+  // régression linéaire (tendance)
+  const n=pts.length, sx=pts.reduce((s,p)=>s+p.t,0), sy=effs.reduce((s,e)=>s+e,0);
+  const sxx=pts.reduce((s,p)=>s+p.t*p.t,0), sxy=pts.reduce((s,p)=>s+p.t*p.eff,0);
+  const slope=(n*sxy-sx*sy)/(n*sxx-sx*sx||1), intercept=(sy-slope*sx)/n;
+  const yA=slope*t0+intercept, yB=slope*t1+intercept;
+  const dots=pts.map(p=>`<circle cx="${x(p.t).toFixed(1)}" cy="${y(p.eff).toFixed(1)}" r="3" fill="#5bd07a"><title>${new Date(p.t).toLocaleDateString('fr-FR',{day:'numeric',month:'short'})} · ${fmtPace(p.pace)}/km · ${p.hr}bpm</title></circle>`).join('');
+  const trend=`<line x1="${x(t0).toFixed(1)}" y1="${y(yA).toFixed(1)}" x2="${x(t1).toFixed(1)}" y2="${y(yB).toFixed(1)}" stroke="#b6f24a" stroke-width="2" stroke-dasharray="5 4"/>`;
+  el.innerHTML=`<svg viewBox="0 0 ${W} ${H}" style="width:100%;height:auto;display:block">${trend}${dots}</svg>`;
+  const gain=((yB-yA)/yA*100);
+  const weeks=Math.max(1,Math.round(span/86400000/7));
+  const improving=gain>0.8, stable=Math.abs(gain)<=0.8;
+  const col=improving?'var(--go)':stable?'var(--amber)':'var(--red)';
+  const verdict=improving?`ta base progresse : à FC égale, tu cours plus vite (+${gain.toFixed(1)}% d'efficience sur ${weeks} sem). C'est exactement ce qu'on veut voir en construction aérobie.`:stable?`efficience stable (${gain>=0?'+':''}${gain.toFixed(1)}% sur ${weeks} sem). Normal en phase de charge ou par forte chaleur estivale — le gain viendra à l'affûtage.`:`efficience en léger recul (${gain.toFixed(1)}% sur ${weeks} sem). Souvent la fatigue accumulée ou la chaleur ; croise avec ton TSB. Rien d'alarmant isolément.`;
+  document.getElementById('eff-sub').innerHTML=`<strong style="color:${col}">Tendance : ${verdict}</strong> Chaque point = un footing facile (vitesse par battement). La ligne lime est la tendance. Sensible à la chaleur : lis sur plusieurs semaines.`;
+}
+
+/* ===================== MICRO-CYCLE 7 JOURS (prescription proactive) =====================
+   Le chaînon entre le Plan (macro) et le générateur (une séance) : les 7 prochains jours,
+   calés sur ta charge réelle (ACWR/TSB/streak/dernière qualité) et la phase de ton plan.
+   Respecte tes principes : 2 qualités/sem max hors bloc, AS42 continu, SL le week-end,
+   récup après série longue. Reste indicatif — Léo décide. */
+function currentPhaseInfo(){
+  const p=loadPlan();
+  if(!p)return{race:'general',phase:'general',weeks:99};
+  const dist={'10k':10,'semi':21.0975,'marathon':42.195}[p.race];
+  const raceDate=new Date(p.date+'T09:00:00');
+  const weeks=Math.max(0,Math.round(daysBetween(new Date(),raceDate)/7));
+  const taper=p.race==='marathon'?3:2;
+  const spec=Math.min(p.race==='marathon'?9:p.race==='semi'?7:5,Math.max(0,weeks-taper));
+  const phase=weeks<=taper?'taper':weeks<=taper+spec?'specific':'general';
+  return{race:p.race,phase,weeks};
+}
+function microCycle(){
+  const info=currentPhaseInfo();
+  const aw=ACTS.length?acwr(ACTS):{ratio:1}, f=ACTS.length?fitnessSeries():null;
+  const tsb=f?f.T[f.T.length-1]:0;
+  const streak=ACTS.length?runStreak():0;
+  const dsq=ACTS.length?daysSinceQuality():3;
+  const overload=aw.ratio>1.5||tsb<-25||streak>=7;
+  // jours de la semaine à venir (à partir de demain)
+  const names=['Lun','Mar','Mer','Jeu','Ven','Sam','Dim'];
+  const today=new Date(); const out=[];
+  // gabarit hebdo selon phase (types de séance), avec SL le dimanche
+  let quality;
+  if(info.phase==='taper') quality=['as_court'];
+  else if(info.phase==='general') quality=['cotes'];
+  else if(info.race==='marathon') quality=['as42','seuil_leger'];
+  else if(info.race==='semi') quality=['seuil','tempo'];
+  else quality=['vo2','seuil'];
+  const maxQ=info.phase==='general'?1:2;
+  quality=quality.slice(0,maxQ);
+
+  // placement : Dim = SL, Mar/Jeu = qualités, reste EF, 1 jour récup/off
+  const plan={};
+  for(let i=0;i<7;i++){const d=new Date(today.getTime()+(i+1)*86400000);plan[i]={date:d,dow:(d.getDay()+6)%7};}
+  const bykey={}; Object.values(plan).forEach(p=>bykey[p.dow]=p);
+  const set=(dow,type,label,detail,col)=>{if(bykey[dow])bykey[dow].sess={type,label,detail,col};};
+
+  set(6,'sl','Sortie longue', info.race==='marathon'&&info.phase!=='general'?'28–34 km, finish 4–8 km à AS42 sur jambes entamées':'22–26 km EF/AJ souple','go');
+  if(quality[0]) set(1, quality[0], qLabel(quality[0]), qDetail(quality[0]), qCol(quality[0]));
+  if(quality[1]) set(3, quality[1], qLabel(quality[1]), qDetail(quality[1]), qCol(quality[1]));
+  set(0,'recup','Récup / OFF','Repos complet ou 30–40′ décrassage selon les jambes','teal');
+  [2,4,5].forEach(dow=>{ if(!bykey[dow].sess) set(dow,'ef','Footing EF','45–70′ EF, cadence 175–182, lignes droites en fin','ef'); });
+
+  // ajustements charge : si surcharge, dégrader la 1re qualité de la semaine en EF
+  const notes=[];
+  if(overload){
+    const why=aw.ratio>1.5?`ACWR ${aw.ratio.toFixed(2)}`:tsb<-25?`TSB ${tsb.toFixed(0)}`:`${streak} j consécutifs`;
+    // trouver la première qualité et l'alléger
+    for(const dow of [1,3]){ const s=bykey[dow]&&bykey[dow].sess; if(s&&['as42','seuil','seuil_leger','tempo','vo2','cotes','as_court'].includes(s.type)){ bykey[dow].sess={type:'ef',label:'Footing EF (allégé)',detail:'Charge élevée cette semaine — on remplace cette qualité par de l\'EF le temps d\'assimiler',col:'ef'}; break; } }
+    notes.push(`<strong>Semaine sous surveillance (${why}).</strong> J'ai retiré une qualité et privilégié l'assimilation. Réintroduis l'intensité quand le TSB remonte.`);
+  } else if(dsq>=5 && info.phase!=='taper'){
+    notes.push(`Pas de qualité depuis ${dsq} jours : la semaine en propose ${quality.length}. Tes jambes sont fraîches, profites-en.`);
+  }
+  if(info.phase==='taper')notes.push('<strong>Affûtage :</strong> volume en baisse, on garde juste des rappels d\'allure courts. La forme se révèle, elle ne se construit plus.');
+
+  return{days:Object.values(plan),notes,info,tsb,aw,streak};
+}
+function qLabel(t){return{as42:'Bloc AS42',seuil:'Seuil / AS21',seuil_leger:'Seuil léger',tempo:'Tempo',vo2:'VO2 / AS10',cotes:'Côtes',as_court:'Rappel d\'allure'}[t]||t;}
+function qDetail(t){return{
+  as42:'Échauffement + 10–16 km continus à AS42 (3\'42), jamais en intervalles',
+  seuil:'Échauffement + 3×2000–3000 m au seuil, récup 400 m',
+  seuil_leger:'Échauffement + 2×2000 m au seuil, court et propre',
+  tempo:'Échauffement + 25–35′ tempo continu en contrôle',
+  vo2:'Échauffement + 4×2000 m à AS10, récup 500 m',
+  cotes:'Échauffement + 8–12×45″ en côte, récup descente',
+  as_court:'Échauffement + 3–5 km à allure course pour garder le pattern'
+}[t]||'';}
+function qCol(t){return{as42:'blue',seuil:'amber',seuil_leger:'amber',tempo:'violet',vo2:'red',cotes:'red',as_court:'blue'}[t]||'go';}
+
+function renderMicro(){
+  const el=document.getElementById('micro-out'); if(!el)return;
+  const mc=microCycle();
+  const dayName=d=>d.toLocaleDateString('fr-FR',{weekday:'short',day:'numeric'});
+  const rows=mc.days.map(p=>{
+    const s=p.sess||{label:'Repos',detail:'Jour libre',col:'teal',type:'off'};
+    const z=({ef:ZBY.ef,recup:ZBY.recovery,sl:ZBY.ef})[s.type];
+    const col=s.col;
+    return`<div class="mc-day">
+      <div class="mc-dow">${dayName(p.date)}</div>
+      <div class="mc-sess">
+        <span class="tag ${col}">${s.label}</span>
+        <div class="mc-detail">${s.detail}</div>
+      </div>
+    </div>`;
+  }).join('');
+  const phaseLbl={general:'prépa générale',specific:'bloc spécifique',taper:'affûtage'}[mc.info.phase];
+  const notesHtml=mc.notes.length?`<div class="coachbox amber" style="margin-top:14px"><h5>Lecture de la semaine</h5>${mc.notes.map(n=>`<p>${n}</p>`).join('')}</div>`:'';
+  el.innerHTML=`
+    <div class="sub" style="margin-bottom:10px">Semaine calée sur ta phase (<strong>${phaseLbl}</strong>)${ACTS.length?` · ACWR ${mc.aw.ratio.toFixed(2)} · TSB ${mc.tsb>0?'+':''}${mc.tsb.toFixed(0)} · streak ${mc.streak} j`:''}. Indicatif — écoute tes jambes et adapte.</div>
+    <div class="mc-grid">${rows}</div>
+    ${notesHtml}
+    <p class="hint" style="margin-top:10px">Un jour te tente en particulier ? Va dans <strong>Coach</strong> pour générer la séance détaillée (échauffement, allures, chaussure).</p>`;
 }
 
 /* ===================== GAUGE ===================== */
@@ -617,29 +825,29 @@ function gaugeSVG(elId,ratio){
   const pt=ang=>{const a=ang*Math.PI/180;return[cx+r*Math.cos(a),cy+r*Math.sin(a)];};
   const arc=(a0,a1,c,w)=>{const[x0,y0]=pt(a0),[x1,y1]=pt(a1),large=(a1-a0)>180?1:0;return`<path d="M${x0} ${y0} A${r} ${r} 0 ${large} 1 ${x1} ${y1}" stroke="${c}" stroke-width="${w}" fill="none" stroke-linecap="round"/>`;};
   const span=end-start,frac=v=>start+span*Math.min(v/2,1);
-  let svg=arc(start,end,'#e2e8e1',8);
-  svg+=arc(start,frac(0.8),'#f6e2bd',6)+arc(frac(0.8),frac(1.3),'#bde8cf',6)+arc(frac(1.3),frac(1.5),'#f6e2bd',6)+arc(frac(1.5),end,'#f4cccc',6);
+  let svg=arc(start,end,'#2a333f',8);
+  svg+=arc(start,frac(0.8),'#3a2c0e',6)+arc(frac(0.8),frac(1.3),'#232e12',6)+arc(frac(1.3),frac(1.5),'#3a2c0e',6)+arc(frac(1.5),end,'#3a1613',6);
   const na=frac(Math.min(ratio,2)),[nx,ny]=pt(na);
-  const col=ratio<0.8?'#dd8a12':ratio<=1.3?'#0c8a58':ratio<=1.5?'#dd8a12':'#dc4a42';
+  const col=ratio<0.8?'#ffb128':ratio<=1.3?'#b6f24a':ratio<=1.5?'#ffb128':'#ff5d52';
   svg+=`<line x1="${cx}" y1="${cy}" x2="${nx}" y2="${ny}" stroke="${col}" stroke-width="3" stroke-linecap="round"/><circle cx="${cx}" cy="${cy}" r="4" fill="${col}"/>`;
   el.innerHTML=svg;return col;
 }
 function scoreRing(score){
   const cx=40,cy=40,r=32,C=2*Math.PI*r;
-  const col=score>=85?'#0c8a58':score>=65?'#2b6fe0':score>=45?'#dd8a12':'#dc4a42';
+  const col=score>=85?'#b6f24a':score>=65?'#4d9dff':score>=45?'#ffb128':'#ff5d52';
   const off=C*(1-score/100);
   return`<svg width="80" height="80" viewBox="0 0 80 80">
-    <circle cx="${cx}" cy="${cy}" r="${r}" stroke="#e2e8e1" stroke-width="7" fill="none"/>
+    <circle cx="${cx}" cy="${cy}" r="${r}" stroke="#2a333f" stroke-width="7" fill="none"/>
     <circle cx="${cx}" cy="${cy}" r="${r}" stroke="${col}" stroke-width="7" fill="none" stroke-linecap="round"
       stroke-dasharray="${C}" stroke-dashoffset="${off}" transform="rotate(-90 ${cx} ${cy})"/>
     <text x="40" y="46" text-anchor="middle" font-family="Archivo,sans-serif" font-size="22" font-weight="800" fill="${col}">${score}</text>
   </svg>`;
 }
 function acwrState(r){
-  if(r<0.8)return['Charge en baisse','#dd8a12','Sous-charge / affûtage. OK si voulu, sinon stimulus faible.'];
-  if(r<=1.3)return['Zone optimale','#0c8a58','Progression sans surcharge. La bonne zone en construction.'];
-  if(r<=1.5)return['Vigilance','#dd8a12','Montée rapide. Surveille sommeil et jambes.'];
-  return['Surcharge','#dc4a42','Risque accru. Insère un jour OFF ou très léger.'];
+  if(r<0.8)return['Charge en baisse','#ffb128','Sous-charge / affûtage. OK si voulu, sinon stimulus faible.'];
+  if(r<=1.3)return['Zone optimale','#b6f24a','Progression sans surcharge. La bonne zone en construction.'];
+  if(r<=1.5)return['Vigilance','#ffb128','Montée rapide. Surveille sommeil et jambes.'];
+  return['Surcharge','#ff5d52','Risque accru. Insère un jour OFF ou très léger.'];
 }
 
 /* ===================== DÉTECTION DE STRUCTURE DE SÉANCE ===================== */
@@ -949,9 +1157,9 @@ function renderPlan(){
       </div>
       <h4>Découpage du bloc</h4>
       <div class="zonebar">
-        ${gen>0?`<div style="width:${segW(gen)}%;background:#0c8a58">Générale ${gen} sem</div>`:''}
-        ${spec>0?`<div style="width:${segW(spec)}%;background:#2b6fe0">Spécifique ${spec} sem</div>`:''}
-        <div style="width:${segW(taper)}%;background:#dd8a12">Affûtage ${taper} sem</div>
+        ${gen>0?`<div style="width:${segW(gen)}%;background:#b6f24a">Générale ${gen} sem</div>`:''}
+        ${spec>0?`<div style="width:${segW(spec)}%;background:#4d9dff">Spécifique ${spec} sem</div>`:''}
+        <div style="width:${segW(taper)}%;background:#ffb128">Affûtage ${taper} sem</div>
       </div>
       <div class="sub">Bascule en spécifique le <strong>${fdate(specStart)}</strong> · début d'affûtage le <strong>${fdate(taperStart)}</strong>.</div>
       <div class="coachbox ${phaseLbl[1]}" style="margin-top:16px">
@@ -969,7 +1177,7 @@ function buildPlan(){
   if(!tsec){$('#pl-err').textContent='Chrono au format h:mm:ss (ex. 2:36:00) ou mm:ss.';return;}
   if(new Date(date)<new Date()){$('#pl-err').textContent='La date est déjà passée.';return;}
   savePlan({race,date,target});
-  renderPlan();
+  renderPlan();renderMicro();
 }
 
 /* ===================== TODAY ===================== */
@@ -1227,7 +1435,7 @@ function renderLoad(){
   const aw=acwr(ACTS),col=gaugeSVG('acwr-gauge',aw.ratio),st=acwrState(aw.ratio);
   document.getElementById('acwr-val').textContent=aw.ratio.toFixed(2);document.getElementById('acwr-val').style.color=col;
   document.getElementById('acwr-state').textContent=st[0];document.getElementById('acwr-state').style.color=col;
-  document.getElementById('acwr-sub').innerHTML=`Aigu 7j <strong>${Math.round(aw.acute)}</strong> · chronique <strong>${Math.round(aw.chronic)}</strong>/sem`;
+  document.getElementById('acwr-sub').innerHTML=`Aigu 7j <strong>${Math.round(aw.acute)}</strong> · chronique <strong>${Math.round(aw.chronic)}</strong>/sem · lissé EWMA (moins sensible aux pics)`;
 
   const ms=monotonyStrain(ACTS);
   document.getElementById('mono-val').textContent=ms.monotony.toFixed(2);
@@ -1261,6 +1469,7 @@ function renderLoad(){
   document.getElementById('o-ef').innerHTML=fmtPace(efR.length?efR.reduce((s,a)=>s+paceOf(a),0)/efR.length:0)+'<span class="unit">/km</span>';
 
   const fit=renderFitness();
+  renderEfficiency();
 
   let cls,coach;
   if(aw.ratio>1.5||ms.monotony>2.2){cls='red';coach=`<h5>Plan 72h — lève le pied</h5><p>ACWR ${aw.ratio.toFixed(2)} / monotonie ${ms.monotony.toFixed(2)} hors zone sûre${fit.tsb<-25?` · TSB ${fit.tsb.toFixed(0)} en fatigue élevée`:''}.</p><p><strong>Action :</strong> footing &lt;40' ou OFF, zéro intensité. À ~${daysBetween(new Date(),CFG.raceDate)} jours de Rennes, priorité à l'assimilation.</p><p><strong>Surveille :</strong> FC repos en hausse, sommeil, jambes lourdes 3j d'affilée.</p>`;}
@@ -1363,7 +1572,7 @@ async function loadAndRender(){
     document.getElementById('authbar').classList.add('connected');
     document.getElementById('loader').classList.add('hidden');
     showData(true);
-    renderLoad();renderToday();renderSessionList();renderZones();renderRennes();
+    renderLoad();renderToday();renderSessionList();renderZones();renderRennes();renderMicro();
     document.getElementById('hdr-right').innerHTML=`<span class="big">${ACTS.length}</span> courses · 120 j`;
     showTab('today');
   }catch(e){
@@ -1431,13 +1640,14 @@ document.getElementById('forget-btn').addEventListener('click',()=>{
 $$('#tabs button').forEach(b=>b.addEventListener('click',()=>showTab(b.dataset.tab)));
 document.getElementById('g-btn').addEventListener('click',genSession);
 document.getElementById('pl-btn').addEventListener('click',buildPlan);
-document.getElementById('pl-clear').addEventListener('click',()=>{try{localStorage.removeItem(PLAN_KEY);}catch(e){};$('#pl-out').innerHTML='';});
+document.getElementById('pl-clear').addEventListener('click',()=>{try{localStorage.removeItem(PLAN_KEY);}catch(e){};$('#pl-out').innerHTML='';renderMicro();});
 
 /* démarrage */
 (function init(){
   renderZones();
   renderRennes();
   renderPlan();
+  renderMicro();
   const p=loadPlan();
   if(p){const ctxSel=document.getElementById('g-ctx');if(ctxSel.querySelector(`option[value="${p.race}"]`))ctxSel.value=p.race;}
   const c=loadCreds();
